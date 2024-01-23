@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Hangfire;
+using Hangfire.SqlServer;
+using Microsoft.AspNetCore.Mvc;
 
 namespace UrlSave.Extensions;
 
@@ -18,5 +20,23 @@ public static class ServiceExtensions
             options.GroupNameFormat = "'v'VVV";
             options.SubstituteApiVersionInUrl = true;
         });
+    }
+
+    public static void AddHangfireInfrastructure(this IServiceCollection services, string connectionString)
+    {
+        services.AddHangfire(configuration => configuration
+            .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+            .UseSimpleAssemblyNameTypeSerializer()
+            .UseRecommendedSerializerSettings()
+            .UseSqlServerStorage(connectionString, new SqlServerStorageOptions()
+            {
+                QueuePollInterval = TimeSpan.FromSeconds(10),
+                TransactionTimeout = TimeSpan.FromMilliseconds(500),
+                SchemaName = "hangfire",
+                PrepareSchemaIfNecessary = true,
+            }));
+
+
+        services.AddHangfireServer();
     }
 }

@@ -1,15 +1,14 @@
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
 using UrlSave.Contexts;
 using UrlSave.Extensions;
-//https://localhost:7098/swagger/v1/swagger.json
-//https://localhost:7098/swagger/v1/swagger.json
+using UrlSave.Jobs;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
-//Add Swagger service
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
@@ -29,26 +28,26 @@ builder.Services.AddSwaggerGen(options =>
             Url = new Uri("https://example.com/license")
         }
     });
-    // using System.Reflection;
     var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
 });
-builder.Services.AddApiVersioningExtension();
 
 string connection = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddHangfireInfrastructure(connection);
+builder.Services.AddApiVersioningExtension();
 
-// добавляем контекст ApplicationContext в качестве сервиса в приложение
 builder.Services.AddDbContext<LinkContext>(options => options.UseSqlServer(connection));
 var app = builder.Build();
 
+app.UseHangfireDashboard();
 app.UseSwagger();
 app.UseSwaggerUI(options =>
 {
     options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
     options.RoutePrefix = string.Empty;
 });
+RecurringJob.AddOrUpdate<ParceKaspiJob>("parcer", x => x.Execute(), Cron.Minutely);
 
 app.MapControllers();
-
 app.Run();
 
