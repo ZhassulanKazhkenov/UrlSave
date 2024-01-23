@@ -1,5 +1,4 @@
-﻿
-namespace UrlSave
+﻿namespace UrlSave.Entities
 {
     public class Link
     {
