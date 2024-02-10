@@ -5,7 +5,6 @@ using UrlSave.Models;
 
 namespace UrlSave.Controllers.v1
 {
-    //https://learn.microsoft.com/en-us/aspnet/web-api/overview/web-api-routing-and-actions/attribute-routing-in-web-api-2
     [ApiController]
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiVersion("1.0")]
@@ -18,8 +17,6 @@ namespace UrlSave.Controllers.v1
         {
             _context = context;
         }
-
-        public object GetLink { get; private set; }
 
         /// <summary>
         /// Post a specific.

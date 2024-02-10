@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using UrlSave.Contexts;
 
@@ -11,9 +12,11 @@ using UrlSave.Contexts;
 namespace UrlSave.Migrations
 {
     [DbContext(typeof(LinkContext))]
-    partial class LinkContextModelSnapshot : ModelSnapshot
+    [Migration("20240206121842_AddPriceProductSupplierTable")]
+    partial class AddPriceProductSupplierTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -91,15 +94,13 @@ namespace UrlSave.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("LinkId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
+                    b.Property<string>("URL")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.HasIndex("LinkId");
+                    b.HasKey("Id");
 
                     b.ToTable("Products");
                 });
@@ -160,17 +161,6 @@ namespace UrlSave.Migrations
                     b.Navigation("Price");
 
                     b.Navigation("ProductSupplier");
-                });
-
-            modelBuilder.Entity("UrlSave.Entities.Product", b =>
-                {
-                    b.HasOne("UrlSave.Entities.Link", "Link")
-                        .WithMany()
-                        .HasForeignKey("LinkId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Link");
                 });
 
             modelBuilder.Entity("UrlSave.Entities.ProductSupplier", b =>
