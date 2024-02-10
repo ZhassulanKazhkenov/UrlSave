@@ -30,6 +30,10 @@ namespace UrlSave.Controllers.v1
         public async Task<ActionResult> PostLink([FromBody] LinkDto model)
         {
             var link = model.ToLink();
+            if (!Uri.IsWellFormedUriString(link.Url, UriKind.Absolute))
+            {
+                return BadRequest();
+            }
             link.CreatedDate = DateTime.Now;
             _context.Links.Add(link);
             await _context.SaveChangesAsync();
