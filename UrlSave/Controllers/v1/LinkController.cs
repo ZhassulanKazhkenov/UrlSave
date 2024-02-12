@@ -34,6 +34,12 @@ namespace UrlSave.Controllers.v1
             {
                 return BadRequest();
             }
+            var uri = new Uri(link.Url);
+            var host = uri.Host.ToLower(); 
+            if (!host.EndsWith("kaspi.kz"))
+            {
+                return BadRequest("Invalid domain. Only kaspi.kz URLs are allowed.");
+            }
             link.CreatedDate = DateTime.Now;
             _context.Links.Add(link);
             await _context.SaveChangesAsync();

@@ -46,7 +46,7 @@ app.UseSwaggerUI(options =>
     options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
     options.RoutePrefix = string.Empty;
 });
-RecurringJob.AddOrUpdate<ParceKaspiJob>("parcer", x => x.Execute(), Cron.Minutely);
+RecurringJob.AddOrUpdate<ParceKaspiJob>("parcer", x => x.Execute(), "*/5 * * * *");
 
 app.MapControllers();
 app.Run();
