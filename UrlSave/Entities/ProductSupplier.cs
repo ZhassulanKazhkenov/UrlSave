@@ -1,6 +1,6 @@
 ﻿namespace UrlSave.Entities
 {
-    public class ProductSupplier
+    public class ProductSupplier : BaseEntity
     {
         public int Id { get; set; }
         public int ProductId {  get; set; }
