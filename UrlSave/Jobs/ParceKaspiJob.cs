@@ -6,6 +6,7 @@ using UrlSave.Models;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using UrlSave.Contexts;
+using UrlSave.Entities;
 
 namespace UrlSave.Jobs
 {
@@ -28,17 +29,17 @@ namespace UrlSave.Jobs
             var links = _context.Links.ToList();
             foreach (var link in links)
             {
-                ParcerCode(link.Url);
+                ParcerCode(link);
             }
         }
 
-        private void ParcerCode(string url)
+        private void ParcerCode(Link link)
         {
             List<SellerInfoDto> sellers = new List<SellerInfoDto>();
             IWebDriver driver = new ChromeDriver();
             try
             {
-                driver.Navigate().GoToUrl(url);
+                driver.Navigate().GoToUrl(link.Url);
 
                 Thread.Sleep(5000);
 
@@ -63,6 +64,36 @@ namespace UrlSave.Jobs
                 // Выводим информацию о каждом продавце
                 foreach (var seller in sellers)
                 {
+                    var s = new Supplier()
+                    {
+                        Name = seller.Name
+                    };
+                    _context.Suppliers.Add(s);
+                    var pr = new Product()
+                    {
+                        Name = "",
+                        Description = "",
+                        LinkId = link.Id
+                    };
+                    _context.Products.Add(pr);
+                    var pS = new ProductSupplier()
+                    {
+                        ProductId = pr.Id,
+                        SupplierId = s.Id
+                    };
+                    _context.ProductSuppliers.Add(pS);
+                    var p = new Price()
+                    {
+                        Value = seller.Price.ToString()
+                    };
+                    _context.Prices.Add(p);
+                    var PPS = new PriceProductSupplier
+                    {
+                        PriceId = p.Id, 
+                        ProductSupplierId = pS.Id,
+                    };
+                    _context.PriceProductSuppliers.Add(PPS);
+                    _context.SaveChanges();
                     Console.WriteLine($"Seller: {seller.Name}, Price: {seller.Price}");
                 }
             }
