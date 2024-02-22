@@ -1,12 +1,11 @@
 ﻿using Hangfire;
-using Hangfire.Dashboard;
-using System.Net.Http;
-using System;
-using UrlSave.Models;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.Support.UI;
+using System.Text;
 using UrlSave.Contexts;
 using UrlSave.Entities;
+using UrlSave.Models;
 
 namespace UrlSave.Jobs
 {
@@ -41,13 +40,7 @@ namespace UrlSave.Jobs
             {
                 driver.Navigate().GoToUrl(link.Url);
 
-                Thread.Sleep(5000);
-
-                var priceElement = driver.FindElement(By.ClassName("item__price-once"));
-                string price = priceElement.Text;
-
-                Console.WriteLine($"Price is: {ConvertPriceToLong(price)}");
-
+                Thread.Sleep(10000);
                 var sellersElements = driver.FindElements(By.XPath("//tbody/tr"));
                 foreach (var element in sellersElements)
                 {
@@ -60,39 +53,53 @@ namespace UrlSave.Jobs
                         Price = ConvertPriceToLong(priceString)
                     });
                 }
+                
+                var specElements = driver.FindElements(By.CssSelector("ul.short-specifications li.short-specifications__text"));
+                var specName = new StringBuilder();
+                foreach (var element in specElements)
+                {
+                    specName.Append(element.Text + " ");
+                }
+                var productName = driver.FindElement(By.CssSelector("h1.item__heading")).Text;
 
-                // Выводим информацию о каждом продавце
                 foreach (var seller in sellers)
                 {
-                    var s = new Supplier()
+                    var supplier = new Supplier()
                     {
                         Name = seller.Name
                     };
-                    _context.Suppliers.Add(s);
-                    var pr = new Product()
+                    _context.Suppliers.Add(supplier);
+
+                    var product = new Product()
                     {
-                        Name = "",
-                        Description = "",
+                        Name = productName,
+                        Description = specName.ToString(),
                         LinkId = link.Id
                     };
-                    _context.Products.Add(pr);
-                    var pS = new ProductSupplier()
+                    _context.Products.Add(product);
+                    _context.SaveChanges();
+
+                    var productSupplier = new ProductSupplier()
                     {
-                        ProductId = pr.Id,
-                        SupplierId = s.Id
+                        ProductId = product.Id,
+                        SupplierId = supplier.Id
                     };
-                    _context.ProductSuppliers.Add(pS);
-                    var p = new Price()
+                    _context.ProductSuppliers.Add(productSupplier);
+
+                    var price = new Price()
                     {
                         Value = seller.Price.ToString()
                     };
-                    _context.Prices.Add(p);
-                    var PPS = new PriceProductSupplier
+                    _context.Prices.Add(price);
+                    _context.SaveChanges();
+
+                    var priceProductSupplier = new PriceProductSupplier
                     {
-                        PriceId = p.Id, 
-                        ProductSupplierId = pS.Id,
+                        PriceId = price.Id, 
+                        ProductSupplierId = productSupplier.Id,
                     };
-                    _context.PriceProductSuppliers.Add(PPS);
+                    _context.PriceProductSuppliers.Add(priceProductSupplier);
+
                     _context.SaveChanges();
                     Console.WriteLine($"Seller: {seller.Name}, Price: {seller.Price}");
                 }
@@ -103,7 +110,7 @@ namespace UrlSave.Jobs
             }
             finally
             {
-                driver.Quit(); // Закрыть браузер и освободить ресурсы
+                driver.Quit();
             }
         }
 
