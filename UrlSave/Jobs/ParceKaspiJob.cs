@@ -1,7 +1,6 @@
 ﻿using Hangfire;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.Support.UI;
 using System.Text;
 using UrlSave.Contexts;
 using UrlSave.Entities;
@@ -22,17 +21,17 @@ namespace UrlSave.Jobs
 
         [JobDisplayName("Send console log")]
 
-        public void Execute()
+        public async Task Execute()
         {
             _logger.LogInformation("StartKaspiParceJob:" + DateTime.Now);
             var links = _context.Links.ToList();
             foreach (var link in links)
             {
-                ParcerCode(link);
+               await ParcerCode(link);
             }
         }
 
-        private void ParcerCode(Link link)
+        private async Task ParcerCode(Link link)
         {
             List<SellerInfoDto> sellers = new List<SellerInfoDto>();
             IWebDriver driver = new ChromeDriver();
@@ -77,7 +76,7 @@ namespace UrlSave.Jobs
                         LinkId = link.Id
                     };
                     _context.Products.Add(product);
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
 
                     var productSupplier = new ProductSupplier()
                     {
@@ -91,7 +90,7 @@ namespace UrlSave.Jobs
                         Value = seller.Price.ToString()
                     };
                     _context.Prices.Add(price);
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
 
                     var priceProductSupplier = new PriceProductSupplier
                     {
@@ -100,7 +99,7 @@ namespace UrlSave.Jobs
                     };
                     _context.PriceProductSuppliers.Add(priceProductSupplier);
 
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
                     Console.WriteLine($"Seller: {seller.Name}, Price: {seller.Price}");
                 }
             }
