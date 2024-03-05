@@ -5,9 +5,11 @@ using System.Reflection;
 using UrlSave.Contexts;
 using UrlSave.Extensions;
 using UrlSave.Jobs;
+using UrlSave.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
+builder.Services.AddScoped<SupplierService>();
 
 builder.Services.AddSwaggerGen(options =>
 {

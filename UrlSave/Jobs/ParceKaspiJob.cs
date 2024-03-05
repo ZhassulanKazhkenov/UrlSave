@@ -5,6 +5,7 @@ using System.Text;
 using UrlSave.Contexts;
 using UrlSave.Entities;
 using UrlSave.Models;
+using UrlSave.Services;
 
 namespace UrlSave.Jobs
 {
@@ -12,11 +13,12 @@ namespace UrlSave.Jobs
     {
         private readonly ILogger<ParceKaspiJob> _logger;
         private readonly LinkContext _context;
-
-        public ParceKaspiJob(ILogger<ParceKaspiJob> logger, LinkContext context)
+        private readonly SupplierService _supplierService;
+        public ParceKaspiJob(ILogger<ParceKaspiJob> logger, LinkContext context, SupplierService supplierService)
         {
             _logger = logger;
             _context = context;
+            _supplierService = supplierService;
         }
 
         [JobDisplayName("Send console log")]
@@ -67,7 +69,7 @@ namespace UrlSave.Jobs
                     {
                         Name = seller.Name
                     };
-                    _context.Suppliers.Add(supplier);
+                    var createSupplier = await _supplierService.AddOrUpdate(supplier);
 
                     var product = new Product()
                     {
@@ -81,7 +83,7 @@ namespace UrlSave.Jobs
                     var productSupplier = new ProductSupplier()
                     {
                         ProductId = product.Id,
-                        SupplierId = supplier.Id
+                        SupplierId = createSupplier.Id
                     };
                     _context.ProductSuppliers.Add(productSupplier);
 
