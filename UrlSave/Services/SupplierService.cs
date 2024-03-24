@@ -12,18 +12,18 @@ namespace UrlSave.Services
         {
             _linkContext = linkContext;
         }
-        public async Task<Supplier> AddOrUpdate(Supplier supplier)
+        public async Task<Supplier> AddAsync(Supplier supplier)
         {
-            var sup = await _linkContext.Suppliers
-                .Where(x => x.Name.Equals(supplier.Name, StringComparison.OrdinalIgnoreCase))
+            var existingSupplier = await _linkContext.Suppliers
+                .Where(x => x.Name.ToLower() == supplier.Name.ToLower())
                 .FirstOrDefaultAsync();
-            if (sup == null)
+            if (existingSupplier == null)
             {
                 _linkContext.Suppliers.Add(supplier);
                 await _linkContext.SaveChangesAsync();
                 return supplier;
             }
-            return sup;
+            return existingSupplier;
         }
     }
 }

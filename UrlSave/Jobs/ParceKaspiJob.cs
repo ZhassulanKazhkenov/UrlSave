@@ -14,11 +14,15 @@ namespace UrlSave.Jobs
         private readonly ILogger<ParceKaspiJob> _logger;
         private readonly LinkContext _context;
         private readonly SupplierService _supplierService;
-        public ParceKaspiJob(ILogger<ParceKaspiJob> logger, LinkContext context, SupplierService supplierService)
+        private readonly ProductService _productService;
+        private readonly ProductSupplierService _productSupplierService;
+        public ParceKaspiJob(ILogger<ParceKaspiJob> logger, LinkContext context, SupplierService supplierService, ProductService productService, ProductSupplierService productSupplierService)
         {
             _logger = logger;
             _context = context;
             _supplierService = supplierService;
+            _productService = productService;
+            _productSupplierService = productSupplierService;
         }
 
         [JobDisplayName("Send console log")]
@@ -69,7 +73,7 @@ namespace UrlSave.Jobs
                     {
                         Name = seller.Name
                     };
-                    var createSupplier = await _supplierService.AddOrUpdate(supplier);
+                    var createdSupplier = await _supplierService.AddAsync(supplier);
 
                     var product = new Product()
                     {
@@ -77,15 +81,14 @@ namespace UrlSave.Jobs
                         Description = specName.ToString(),
                         LinkId = link.Id
                     };
-                    _context.Products.Add(product);
-                    await _context.SaveChangesAsync();
+                    var createdProduct = await _productService.AddAsync(product);
 
                     var productSupplier = new ProductSupplier()
                     {
-                        ProductId = product.Id,
-                        SupplierId = createSupplier.Id
+                        ProductId = createdProduct.Id,
+                        SupplierId = createdSupplier.Id
                     };
-                    _context.ProductSuppliers.Add(productSupplier);
+                    var createdProductSupplier = await _productSupplierService.AddAsync(productSupplier);
 
                     var price = new Price()
                     {
@@ -97,7 +100,7 @@ namespace UrlSave.Jobs
                     var priceProductSupplier = new PriceProductSupplier
                     {
                         PriceId = price.Id, 
-                        ProductSupplierId = productSupplier.Id,
+                        ProductSupplierId = createdProductSupplier.Id,
                     };
                     _context.PriceProductSuppliers.Add(priceProductSupplier);
 
