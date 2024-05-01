@@ -1,16 +1,14 @@
-﻿using UrlSave.Entities;
+﻿using System.ComponentModel.DataAnnotations;
+using UrlSave.Entities;
 
 namespace UrlSave.Models
 {
     public class LinkDto
     {
+        [Required]
         public string Url { get; set; }
+
+        [Required]
+        public string Email { get; set; }
     }
-    public static class LinkExtension
-    {
-        public static Link ToLink(this LinkDto linkDto)
-        {
-            return new Link { Url = linkDto.Url };
-        }
-    } 
 }

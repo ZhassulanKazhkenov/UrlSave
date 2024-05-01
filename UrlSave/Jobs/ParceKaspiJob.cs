@@ -29,6 +29,7 @@ namespace UrlSave.Jobs
         public async Task Execute()
         {
             _logger.LogInformation("StartKaspiParceJob:" + DateTime.Now);
+            //todo we need to get only unique url links, to avoid double parsing the same product
             var links = _context.Links.ToList();
             foreach (var link in links)
             {
@@ -78,9 +79,10 @@ namespace UrlSave.Jobs
                     {
                         Name = productName,
                         Description = specName.ToString(),
-                        LinkId = link.Id
                     };
                     var createdProduct = await _productService.AddAsync(product);
+
+                    link.Product = product;
 
                     var productSupplier = new ProductSupplier()
                     {

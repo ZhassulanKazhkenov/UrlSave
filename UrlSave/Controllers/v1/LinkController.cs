@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Net.Mime;
 using UrlSave.Contexts;
+using UrlSave.Entities;
 using UrlSave.Models;
 
 namespace UrlSave.Controllers.v1
@@ -29,11 +31,27 @@ namespace UrlSave.Controllers.v1
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult> PostLink([FromBody] LinkDto model)
         {
-            var link = model.ToLink();
-            if (!Uri.IsWellFormedUriString(link.Url, UriKind.Absolute))
+            if (!Uri.IsWellFormedUriString(model.Url, UriKind.Absolute))
             {
                 return BadRequest();
             }
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == model.Email);
+            int userId = user != null ? user.Id : 0;
+
+            if (user == null)
+            {
+                var newUser = new User { Email = model.Email };
+                await _context.Users.AddAsync(newUser);
+                userId = newUser.Id;
+            }
+
+            var link = new Link 
+            {
+                Url = model.Url,
+                UserId = userId,
+                ProductId = null
+            };
+
             var uri = new Uri(link.Url);
             var host = uri.Host.ToLower(); 
             if (!host.EndsWith("kaspi.kz"))

@@ -6,9 +6,5 @@ namespace UrlSave.Entities
     {
         public string Name { get; set; }
         public string Description { get; set; }
-        public int LinkId { get; set; }
-
-        public virtual Link Link { get; set; }
-
     }
 }
