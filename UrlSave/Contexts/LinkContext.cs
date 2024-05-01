@@ -19,6 +19,8 @@ namespace UrlSave.Contexts
         public DbSet<ProductSupplier> ProductSuppliers { get; set; }
 
         public DbSet<PriceProductSupplier> PriceProductSuppliers { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
         public override int SaveChanges()
         {
