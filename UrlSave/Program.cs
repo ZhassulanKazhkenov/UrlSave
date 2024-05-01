@@ -9,9 +9,7 @@ using UrlSave.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
-builder.Services.AddScoped<SupplierService>();
 builder.Services.AddScoped<ProductService>();
-builder.Services.AddScoped<ProductSupplierService>();
 
 
 builder.Services.AddSwaggerGen(options =>

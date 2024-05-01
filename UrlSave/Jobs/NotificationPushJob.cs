@@ -1,4 +1,5 @@
 ﻿using Hangfire;
+using Microsoft.EntityFrameworkCore;
 using UrlSave.Contexts;
 
 namespace UrlSave.Jobs
@@ -18,6 +19,14 @@ namespace UrlSave.Jobs
         public async Task Execute()
         {
             _logger.LogInformation("StartNotificationPushJob:" + DateTime.Now);
+
+            //var links = _context.Links
+            //    .Where(x => x.ProductId != null)
+            //    .Include(x => x.Product)
+            //    .ThenInclude(x => x.PriceProductSupplier)
+            //    .ThenInclude(x => x.Price)
+            //    .ToList();
+
         }
     }
 }

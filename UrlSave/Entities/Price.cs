@@ -2,6 +2,9 @@
 {
     public class Price : BaseEntity
     {
-        public string Value { get; set; }
+        public long Value { get; set; }
+
+        public int ProductId { get; set; }
+        public virtual Product Product { get; set; }
     }
 }

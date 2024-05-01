@@ -42,6 +42,7 @@ namespace UrlSave.Controllers.v1
             {
                 var newUser = new User { Email = model.Email };
                 await _context.Users.AddAsync(newUser);
+                await _context.SaveChangesAsync();
                 userId = newUser.Id;
             }
 

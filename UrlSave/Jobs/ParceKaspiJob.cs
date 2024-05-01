@@ -4,7 +4,6 @@ using OpenQA.Selenium.Chrome;
 using System.Text;
 using UrlSave.Contexts;
 using UrlSave.Entities;
-using UrlSave.Models;
 using UrlSave.Services;
 
 namespace UrlSave.Jobs
@@ -13,16 +12,12 @@ namespace UrlSave.Jobs
     {
         private readonly ILogger<ParceKaspiJob> _logger;
         private readonly LinkContext _context;
-        private readonly SupplierService _supplierService;
         private readonly ProductService _productService;
-        private readonly ProductSupplierService _productSupplierService;
-        public ParceKaspiJob(ILogger<ParceKaspiJob> logger, LinkContext context, SupplierService supplierService, ProductService productService, ProductSupplierService productSupplierService)
+        public ParceKaspiJob(ILogger<ParceKaspiJob> logger, LinkContext context, ProductService productService)
         {
             _logger = logger;
             _context = context;
-            _supplierService = supplierService;
             _productService = productService;
-            _productSupplierService = productSupplierService;
         }
 
         [JobDisplayName("KaspiJob")]
@@ -39,25 +34,12 @@ namespace UrlSave.Jobs
 
         private async Task ParcerCode(Link link)
         {
-            List<SellerInfoDto> sellers = new List<SellerInfoDto>();
             IWebDriver driver = new ChromeDriver();
             try
             {
                 driver.Navigate().GoToUrl(link.Url);
 
                 Thread.Sleep(10000);
-                var sellersElements = driver.FindElements(By.XPath("//tbody/tr"));
-                foreach (var element in sellersElements)
-                {
-                    var sellerName = element.FindElement(By.CssSelector(".sellers-table__cell a")).Text;
-                    var priceString = element.FindElement(By.CssSelector(".sellers-table__price-cell-text")).Text;
-
-                    sellers.Add(new SellerInfoDto
-                    {
-                        Name = sellerName,
-                        Price = ConvertPriceToLong(priceString)
-                    });
-                }
                 
                 var specElements = driver.FindElements(By.CssSelector("ul.short-specifications li.short-specifications__text"));
                 var specName = new StringBuilder();
@@ -67,47 +49,27 @@ namespace UrlSave.Jobs
                 }
                 var productName = driver.FindElement(By.CssSelector("h1.item__heading")).Text;
 
-                foreach (var seller in sellers)
+                var product = new Product()
                 {
-                    var supplier = new Supplier()
-                    {
-                        Name = seller.Name
-                    };
-                    var createdSupplier = await _supplierService.AddAsync(supplier);
+                    Name = productName,
+                    Description = specName.ToString(),
+                };
+                var createdProduct = await _productService.AddAsync(product);
 
-                    var product = new Product()
-                    {
-                        Name = productName,
-                        Description = specName.ToString(),
-                    };
-                    var createdProduct = await _productService.AddAsync(product);
+                link.Product = createdProduct;
 
-                    link.Product = product;
+                var minPrice = driver.FindElement(By.CssSelector("div.item__price-once")).Text;
 
-                    var productSupplier = new ProductSupplier()
-                    {
-                        ProductId = createdProduct.Id,
-                        SupplierId = createdSupplier.Id
-                    };
-                    var createdProductSupplier = await _productSupplierService.AddAsync(productSupplier);
+                //todo check if last created price is changed only then create a new price
+                var price = new Price()
+                {
+                    Value = ConvertPriceToLong(minPrice),
+                    Product = createdProduct
+                };
+                _context.Prices.Add(price);
+                await _context.SaveChangesAsync();
 
-                    var price = new Price()
-                    {
-                        Value = seller.Price.ToString()
-                    };
-                    _context.Prices.Add(price);
-                    await _context.SaveChangesAsync();
-
-                    var priceProductSupplier = new PriceProductSupplier
-                    {
-                        PriceId = price.Id, 
-                        ProductSupplierId = createdProductSupplier.Id,
-                    };
-                    _context.PriceProductSuppliers.Add(priceProductSupplier);
-
-                    await _context.SaveChangesAsync();
-                    Console.WriteLine($"Seller: {seller.Name}, Price: {seller.Price}");
-                }
+                Console.WriteLine($"Price: {minPrice}");
             }
             catch (Exception ex)
             {
