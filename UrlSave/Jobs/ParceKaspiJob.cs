@@ -25,8 +25,7 @@ namespace UrlSave.Jobs
             _productSupplierService = productSupplierService;
         }
 
-        [JobDisplayName("Send console log")]
-
+        [JobDisplayName("KaspiJob")]
         public async Task Execute()
         {
             _logger.LogInformation("StartKaspiParceJob:" + DateTime.Now);

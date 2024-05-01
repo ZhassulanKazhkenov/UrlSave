@@ -53,7 +53,7 @@ app.UseSwaggerUI(options =>
 });
 RecurringJob.AddOrUpdate<ParceKaspiJob>("parcer", x => x.Execute(), "*/5 * * * *");
 
-//RecurringJob.AddOrUpdate<NotificationPushJob>();
+RecurringJob.AddOrUpdate<NotificationPushJob>("notification", x => x.Execute(), "*/10 * * * *");
 
 
 app.MapControllers();
