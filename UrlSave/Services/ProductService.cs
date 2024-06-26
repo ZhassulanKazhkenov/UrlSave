@@ -13,7 +13,7 @@ namespace UrlSave.Services
             _linkContext = linkContext;
         }
         //Публичный асинхрон метод который возвра тип Product имеет назван AddOrUpdate и приним тип Prod и назв парам product
-        public async Task<Product> AddAsync(Product product) 
+        public async Task<Product> AddAsync(Product product)
         {
             var existingProduct = await _linkContext.Products
                 .Where(x => x.Name.ToLower() == product.Name.ToLower())

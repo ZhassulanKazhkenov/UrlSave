@@ -31,26 +31,37 @@ namespace UrlSave.Jobs
             foreach ( var link in links)
             {
                 var prices = link
-                    .Product
-                    .Prices
-                    .OrderBy(x => x.CreatedDate)
+                    .Product.Prices
+                    .OrderByDescending(x => x.CreatedDate)
                     .ToList();
-
-                var shouldNotify = prices.FirstOrDefault().Value != prices.LastOrDefault().Value;
+                //123 firstPrice 
+                //345 
+                //500
+                //500
+                //123 != 500
+                if (prices.Count < 2) 
+                {
+                    continue;
+                }
+                var shouldNotify = prices[0]?.Value != prices[1]?.Value;
                 if (shouldNotify)
                 {
                     var notification = new Notification
                     {
                         Title = $"Price is changed for {link.Product.Name}",
-                        Body = $"Your notification about price changing. First price is: {prices.FirstOrDefault().Value}, New price is: {prices.LastOrDefault().Value}",
+                        Body = $"Your notification about price changing. Previous price is: {prices[1].Value}, New price is: {prices[0].Value}",
                         Recipient = link.User.Email,
                         IsSend = false,
                         Link = link,
                     };
                     await _context.Notifications.AddAsync(notification);
                     await _context.SaveChangesAsync();
+
+                    
                 }
+
             }
+
         }
     }
 }
