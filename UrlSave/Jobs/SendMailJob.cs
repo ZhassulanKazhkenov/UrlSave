@@ -10,11 +10,13 @@ namespace UrlSave.Jobs
     {
         private readonly ILogger<SendMailJob> _logger;
         private readonly LinkContext _context;
+        private readonly IConfiguration _configuration;
 
-        public SendMailJob(ILogger<SendMailJob> logger, LinkContext context)
+        public SendMailJob(ILogger<SendMailJob> logger, LinkContext context, IConfiguration configuration)
         {
             _logger = logger;
             _context = context;
+            _configuration = configuration;
         }
 
         [JobDisplayName("SendMailJob")]
@@ -53,15 +55,18 @@ namespace UrlSave.Jobs
 
             try
             {
+                var smtpUser = _configuration["Email:SmtpUser"];
+                var smtpPass = _configuration["Email:SmtpPass"];
+                var senderEmail = _configuration["Email:SenderEmail"];
                 using (var smtpClient = new SmtpClient("smtp.gmail.com"))
                 {
                     smtpClient.Port = 587; // или порт, который использует ваш почтовый провайдер
-                    smtpClient.Credentials = new NetworkCredential("", "*******");
+                    smtpClient.Credentials = new NetworkCredential(smtpUser, smtpPass);
                     smtpClient.EnableSsl = true;
 
                     var mailMessage = new MailMessage
                     {
-                        From = new MailAddress(""),
+                        From = new MailAddress(senderEmail),
                         Subject = emailSubject,
                         Body = emailBody,
                         IsBodyHtml = true, // если ваше письмо в формате HTML
