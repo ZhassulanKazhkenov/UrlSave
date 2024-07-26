@@ -1,8 +1,6 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Net;
+using System.Net.Mail;
 using Hangfire;
-using Microsoft.Extensions.Logging;
 using UrlSave.Contexts;
 using UrlSave.Entities;
 
@@ -27,11 +25,10 @@ namespace UrlSave.Jobs
             try
             {
                 // Получаем уведомления с IsSend = false
-                var unsentNotifications = _context.Notifications
+                var notifications = _context.Notifications
                     .Where(n => !n.IsSend)
                     .ToList();
-
-                foreach (var notification in unsentNotifications)
+                foreach (var notification in notifications)
                 {
                     // Предполагаем, что у нас есть метод для отправки электронных писем
                     await SendEmail(notification);
@@ -50,20 +47,36 @@ namespace UrlSave.Jobs
 
         private async Task SendEmail(Notification notification)
         {
-            // Предполагаем, что у нас есть метод для отправки электронных писем
-            // Получаем адрес электронной почты получателя (из User или напрямую из Notification)
             var recipientEmail = notification.Recipient;
-
-            // Формируем содержание письма (например, тему и текст)
             var emailSubject = $"Уведомление об изменении цены: {notification.Title}";
             var emailBody = notification.Body;
 
-            // Отправляем письмо
-            // Пример: SendEmail(recipientEmail, emailSubject, emailBody);
-            // Реализуйте свою логику отправки писем здесь
-            // ...
+            try
+            {
+                using (var smtpClient = new SmtpClient("smtp.gmail.com"))
+                {
+                    smtpClient.Port = 587; // или порт, который использует ваш почтовый провайдер
+                    smtpClient.Credentials = new NetworkCredential("", "*******");
+                    smtpClient.EnableSsl = true;
 
-            _logger.LogInformation($"Письмо отправлено на {recipientEmail}: {emailSubject}");
+                    var mailMessage = new MailMessage
+                    {
+                        From = new MailAddress(""),
+                        Subject = emailSubject,
+                        Body = emailBody,
+                        IsBodyHtml = true, // если ваше письмо в формате HTML
+                    };
+
+                    mailMessage.To.Add(recipientEmail);
+
+                    await smtpClient.SendMailAsync(mailMessage);
+                    _logger.LogInformation($"Письмо отправлено на {recipientEmail}: {emailSubject}");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Ошибка при отправке письма: {ex.Message}");
+            }
         }
     }
 }
