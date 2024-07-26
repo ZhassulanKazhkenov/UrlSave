@@ -30,6 +30,8 @@ namespace UrlSave.Jobs
                 var notifications = _context.Notifications
                     .Where(n => !n.IsSend)
                     .ToList();
+                _logger.LogInformation($"Notifications to Send: {notifications.Count}");
+
                 foreach (var notification in notifications)
                 {
                     // Предполагаем, что у нас есть метод для отправки электронных писем
@@ -47,7 +49,7 @@ namespace UrlSave.Jobs
             }
         }
 
-        private async Task SendEmail(Notification notification)
+        private async Task<bool> SendEmail(Notification notification)
         {
             var recipientEmail = notification.Recipient;
             var emailSubject = $"Уведомление об изменении цены: {notification.Title}";
@@ -55,12 +57,13 @@ namespace UrlSave.Jobs
 
             try
             {
+                _logger.LogInformation($"Try to send: {recipientEmail}");
                 var smtpUser = _configuration["Email:SmtpUser"];
                 var smtpPass = _configuration["Email:SmtpPass"];
                 var senderEmail = _configuration["Email:SenderEmail"];
-                using (var smtpClient = new SmtpClient("smtp.gmail.com"))
+                using (var smtpClient = new SmtpClient("smtp.mail.ru"))
                 {
-                    smtpClient.Port = 587; // или порт, который использует ваш почтовый провайдер
+                    smtpClient.Port = 465;
                     smtpClient.Credentials = new NetworkCredential(smtpUser, smtpPass);
                     smtpClient.EnableSsl = true;
 
@@ -69,7 +72,7 @@ namespace UrlSave.Jobs
                         From = new MailAddress(senderEmail),
                         Subject = emailSubject,
                         Body = emailBody,
-                        IsBodyHtml = true, // если ваше письмо в формате HTML
+                        IsBodyHtml = true,
                     };
 
                     mailMessage.To.Add(recipientEmail);
@@ -77,10 +80,17 @@ namespace UrlSave.Jobs
                     await smtpClient.SendMailAsync(mailMessage);
                     _logger.LogInformation($"Письмо отправлено на {recipientEmail}: {emailSubject}");
                 }
+                return true;
+            }
+            catch (SmtpException smtpEx)
+            {
+                _logger.LogError($"SMTP ошибка при отправке письма: {smtpEx.Message}", smtpEx);
+                return false;
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Ошибка при отправке письма: {ex.Message}");
+                _logger.LogError($"Ошибка при отправке письма: {ex.Message}", ex);
+                return false;
             }
         }
     }
