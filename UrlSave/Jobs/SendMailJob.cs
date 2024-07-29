@@ -61,9 +61,9 @@ namespace UrlSave.Jobs
                 var smtpUser = _configuration["Email:SmtpUser"];
                 var smtpPass = _configuration["Email:SmtpPass"];
                 var senderEmail = _configuration["Email:SenderEmail"];
-                using (var smtpClient = new SmtpClient("smtp.mail.ru"))
+                using (var smtpClient = new SmtpClient("in-v3.mailjet.com"))
                 {
-                    smtpClient.Port = 465;
+                    smtpClient.Port = 587;
                     smtpClient.Credentials = new NetworkCredential(smtpUser, smtpPass);
                     smtpClient.EnableSsl = true;
 
