@@ -35,8 +35,10 @@ namespace UrlSave.Controllers.v1
             {
                 return BadRequest();
             }
+            //var users = await _context.Users.ToListAsync();
+            //var userr = users.FirstOrDefault(x => x.Email == model.Email);
             var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == model.Email);
-            int userId = user != null ? user.Id : 0;
+            int userId = 0;
 
             if (user == null)
             {
@@ -44,6 +46,9 @@ namespace UrlSave.Controllers.v1
                 await _context.Users.AddAsync(newUser);
                 await _context.SaveChangesAsync();
                 userId = newUser.Id;
+            } else 
+            {
+                userId = user.Id;
             }
 
             var link = new Link 
