@@ -1,7 +1,11 @@
-﻿namespace UrlSave.Entities
+﻿namespace UrlSave.Entities;
+
+public class User : BaseEntity
 {
-    public class User : BaseEntity
+    public User(string email)
     {
-        public string Email {  get; set; }
+        Email = email;
     }
+
+    public string Email {  get; set; }
 }

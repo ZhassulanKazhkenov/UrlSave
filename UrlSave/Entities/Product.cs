@@ -1,12 +1,15 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿namespace UrlSave.Entities;
 
-namespace UrlSave.Entities
+public class Product : BaseEntity
 {
-    public class Product : BaseEntity
+    public Product(string name, string description)
     {
-        public string Name { get; set; }
-        public string Description { get; set; }
-
-        public ICollection<Price> Prices { get; set; }
+        Name = name;
+        Description = description;
     }
+
+    public string Name { get; set; }
+    public string Description { get; set; }
+
+    public ICollection<Price> Prices { get; set; }
 }

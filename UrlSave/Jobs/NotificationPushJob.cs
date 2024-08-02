@@ -3,65 +3,68 @@ using Microsoft.EntityFrameworkCore;
 using UrlSave.Contexts;
 using UrlSave.Entities;
 
-namespace UrlSave.Jobs
+namespace UrlSave.Jobs;
+
+public class NotificationPushJob
 {
-    public class NotificationPushJob
+    private readonly ILogger<NotificationPushJob> _logger;
+    private readonly LinkContext _context;
+
+    public NotificationPushJob(ILogger<NotificationPushJob> logger, LinkContext context)
     {
-        private readonly ILogger<NotificationPushJob> _logger;
-        private readonly LinkContext _context;
+        _logger = logger;
+        _context = context;
+    }
 
-        public NotificationPushJob(ILogger<NotificationPushJob> logger, LinkContext context)
+    [JobDisplayName("NotificationPushJob")]
+    public async Task Execute()
+    {
+        try
         {
-            _logger = logger;
-            _context = context;
-        }
+            var links = await _context.Links
+            .Where(x => x.ProductId != null)
+            .Include(x => x.User)
+            .Include(x => x.Product)
+            .ThenInclude(x => x.Prices)
+            .ToListAsync();
 
-        [JobDisplayName("NotificationPushJob")]
-        public async Task Execute()
-        {
-            _logger.LogInformation("StartNotificationPushJob:" + DateTime.Now);
-
-            var links = _context.Links
-                .Where(x => x.ProductId != null)
-                .Include(x => x.User)
-                .Include(x => x.Product)
-                .ThenInclude(x => x.Prices)
-                .ToList();
-
-            foreach ( var link in links)
+            foreach (var link in links)
             {
                 var prices = link
                     .Product.Prices
                     .OrderByDescending(x => x.CreatedDate)
                     .ToList();
-                //123 firstPrice 
-                //345 
-                //500
-                //500
-                //123 != 500
-                if (prices.Count < 2) 
+
+                bool hasInsufficientPrices = prices.Count < 2;
+                if (hasInsufficientPrices)
                 {
                     continue;
                 }
-                var shouldNotify = prices[0]?.Value != prices[1]?.Value;
-                if (shouldNotify)
+                var lastPrice = prices.First();
+                bool shouldNotify = lastPrice.Value != prices[1]?.Value;
+                var existingNotification = await _context.Notifications
+                    .AnyAsync(x => x.PriceId == lastPrice.Id);
+
+                if (shouldNotify && !existingNotification)
                 {
                     var notification = new Notification
                     {
                         Title = $"Price is changed for {link.Product.Name}",
-                        Body = $"Your notification about price changing. Previous price is: {prices[1].Value}, New price is: {prices[0].Value}",
+                        Body = $"Your notification about price changing.<br> Previous price is: {prices[1].Value}, New price is: {lastPrice.Value}<br> Link: <a href='{link.Url}'>{link.Product.Name}</a><br>Raw url: {link.Url}",
                         Recipient = link.User.Email,
                         IsSend = false,
                         Link = link,
+                        Price = lastPrice
                     };
                     await _context.Notifications.AddAsync(notification);
                     await _context.SaveChangesAsync();
-
-                    
                 }
-
             }
-
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            throw;
         }
     }
 }

@@ -36,7 +36,6 @@ public static class ServiceExtensions
                 PrepareSchemaIfNecessary = true,
             }));
 
-
         services.AddHangfireServer();
     }
 }
