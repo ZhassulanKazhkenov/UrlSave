@@ -1,8 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using UrlSave.Contexts;
-using UrlSave.Entities;
-
-namespace UrlSave.Services;
+﻿namespace UrlSave.Services;
 
 public class ProductService
 {
@@ -16,6 +12,7 @@ public class ProductService
     public async Task<Product> AddAsync(Product product)
     {
         var existingProduct = await _linkContext.Products
+            .AsNoTracking()
             .Where(x => x.Name.ToLower() == product.Name.ToLower())
             .FirstOrDefaultAsync();
         if (existingProduct == null)

@@ -1,13 +1,4 @@
-﻿using Hangfire;
-using Microsoft.EntityFrameworkCore;
-using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
-using System.Text;
-using UrlSave.Contexts;
-using UrlSave.Entities;
-using UrlSave.Services;
-
-namespace UrlSave.Jobs;
+﻿namespace UrlSave.Jobs;
 
 public class ParceKaspiJob
 {
@@ -55,12 +46,12 @@ public class ParceKaspiJob
             var createdProduct = await _productService.AddAsync(product);
             link.Product = createdProduct;
 
-            var minPrice = driver.FindElement(By.CssSelector("div.item__price-once")).Text;
+            var parcedMinPrice = driver.FindElement(By.CssSelector("div.item__price-once")).Text;
+            
+            await AddNewPrice(parcedMinPrice.ToLong(), createdProduct);
 
-            var priceLong = ConvertPriceToLong(minPrice);
-            await CreatePrice(priceLong, createdProduct);
-
-            _logger.LogInformation("Price: {minPrice}", minPrice);
+            _logger.LogInformation("Price: {minPrice}", parcedMinPrice);
+            await _context.SaveChangesAsync();
         }
         catch (Exception ex)
         {
@@ -72,9 +63,10 @@ public class ParceKaspiJob
         }
     }
 
-    private async Task CreatePrice(long price, Product product)
+    private async Task AddNewPrice(long price, Product product)
     {
         var lastPrice = await _context.Prices
+            .AsNoTracking()
             .Where(x => x.ProductId == product.Id)
             .OrderByDescending(x => x.CreatedDate)
             .FirstOrDefaultAsync();
@@ -87,22 +79,6 @@ public class ParceKaspiJob
                 Product = product
             };
             _context.Prices.Add(newPrice);
-            await _context.SaveChangesAsync();
-        }
-    }
-
-    private long ConvertPriceToLong(string price)
-    {
-        string digits = new(price.Where(char.IsDigit).ToArray());
-
-        if (long.TryParse(digits, out long priceValue))
-        {
-            return priceValue;
-        }
-        else
-        {
-            _logger.LogError("Cannot convert price to long.");
-            return 0;
         }
     }
 }

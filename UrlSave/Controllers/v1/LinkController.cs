@@ -1,11 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Net.Mime;
-using UrlSave.Contexts;
-using UrlSave.Entities;
-using UrlSave.Models;
-
-namespace UrlSave.Controllers.v1;
+﻿namespace UrlSave.Controllers.v1;
 
 [ApiController]
 [Route("api/v{version:apiVersion}/[controller]")]
@@ -35,7 +28,9 @@ public class LinkController : ControllerBase
         {
             return BadRequest();
         }
-        var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == model.Email);
+        var user = await _context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Email == model.Email);
         int userId = 0;
 
         if (user == null)

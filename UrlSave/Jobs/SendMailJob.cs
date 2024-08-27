@@ -1,11 +1,4 @@
-﻿using System.Net;
-using System.Net.Mail;
-using Hangfire;
-using Microsoft.EntityFrameworkCore;
-using UrlSave.Contexts;
-using UrlSave.Entities;
-
-namespace UrlSave.Jobs;
+﻿namespace UrlSave.Jobs;
 
 public class SendMailJob
 {
@@ -32,14 +25,14 @@ public class SendMailJob
 
             foreach (var notification in notifications)
             {
-                var isSend = await SendEmail(notification);
+                var isSend = await SendEmailAsync(notification);
                 if (isSend)
                 {
                     notification.IsSend = true;
                     _context.Notifications.Update(notification);
-                    await _context.SaveChangesAsync();
                 }
             }
+            await _context.SaveChangesAsync();
         }
         catch (Exception ex)
         {
@@ -47,18 +40,21 @@ public class SendMailJob
         }
     }
 
-    private async Task<bool> SendEmail(Notification notification)
+    private async Task<bool> SendEmailAsync(Notification notification)
     {
-        var recipientEmail = notification.Recipient;
         try
         {
+            var recipientEmail = notification.Recipient;
             _logger.LogInformation($"Try to send: {recipientEmail}");
+
             var smtpUser = _configuration["Email:SmtpUser"];
             var smtpPass = _configuration["Email:SmtpPass"];
             var senderEmail = _configuration["Email:SenderEmail"];
-            using var smtpClient = new SmtpClient("in-v3.mailjet.com")
+            var host = _configuration["Email:Host"];
+            var port = int.Parse(_configuration["Email:Port"]);
+            using var smtpClient = new SmtpClient(host)
             {
-                Port = 587,
+                Port = port,
                 Credentials = new NetworkCredential(smtpUser, smtpPass),
                 EnableSsl = true
             };

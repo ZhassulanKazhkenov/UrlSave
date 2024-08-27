@@ -1,9 +1,4 @@
-﻿using Hangfire;
-using Microsoft.EntityFrameworkCore;
-using UrlSave.Contexts;
-using UrlSave.Entities;
-
-namespace UrlSave.Jobs;
+﻿namespace UrlSave.Jobs;
 
 public class NotificationPushJob
 {
@@ -22,6 +17,7 @@ public class NotificationPushJob
         try
         {
             var links = await _context.Links
+            .AsNoTracking()
             .Where(x => x.ProductId != null)
             .Include(x => x.User)
             .Include(x => x.Product)
@@ -44,7 +40,6 @@ public class NotificationPushJob
                 bool shouldNotify = lastPrice.Value != prices[1]?.Value;
                 var existingNotification = await _context.Notifications
                     .AnyAsync(x => x.PriceId == lastPrice.Id);
-
                 if (shouldNotify && !existingNotification)
                 {
                     var notification = new Notification
@@ -57,9 +52,9 @@ public class NotificationPushJob
                         Price = lastPrice
                     };
                     await _context.Notifications.AddAsync(notification);
-                    await _context.SaveChangesAsync();
                 }
             }
+            await _context.SaveChangesAsync();
         }
         catch (Exception ex)
         {
