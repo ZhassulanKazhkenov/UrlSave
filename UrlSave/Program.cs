@@ -49,15 +49,11 @@ app.UseSwaggerUI(options =>
     options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
     options.RoutePrefix = string.Empty;
 });
-
-var parcerCron = 20;
-var notificationCron = parcerCron + 10;
-var sendMailCron = notificationCron + 5;
-
-RecurringJob.AddOrUpdate<ParceKaspiJob>("parcer", x => x.Execute(), $"*/{parcerCron} * * * *");
-RecurringJob.AddOrUpdate<NotificationPushJob>("notification", x => x.Execute(), $"*/{notificationCron} * * * *");
-RecurringJob.AddOrUpdate<SendMailJob>("sendMail", x => x.Execute(), $"*/{sendMailCron} * * * *");
+RecurringJob.AddOrUpdate<ParceKaspiJob>("parcer", x => x.Execute(), "*/2 * * * *");
+RecurringJob.AddOrUpdate<NotificationPushJob>("notification", x => x.NotifyPriceChanges(), "*/2 * * * *");
+RecurringJob.AddOrUpdate<SendMailJob>("sendMail", x => x.Execute(), "*/1 * * * *");
 
 
 app.MapControllers();
 app.Run();
+

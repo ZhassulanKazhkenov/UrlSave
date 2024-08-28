@@ -1,85 +1,93 @@
-﻿namespace UrlSave.Jobs;
-
-public class ParceKaspiJob
+﻿namespace UrlSave.Jobs
 {
-    private readonly ILogger<ParceKaspiJob> _logger;
-    private readonly LinkContext _context;
-    private readonly ProductService _productService;
-    public ParceKaspiJob(ILogger<ParceKaspiJob> logger, LinkContext context, ProductService productService)
+    public interface IParceKaspiJob
     {
-        _logger = logger;
-        _context = context;
-        _productService = productService;
+        Task ParseKaspiLinks();
+        Task ParcerCode(Link link);
+        Task AddNewPrice(long price, Product product);
+
     }
 
-    [JobDisplayName("KaspiJob")]
-    public async Task Execute()
+    public class ParceKaspiJob : IParceKaspiJob
     {
-        //todo we need to get only unique url links, to avoid double parsing the same product
-        var links = await _context.Links.ToListAsync();
-        foreach (var link in links)
+        private readonly ILogger<ParceKaspiJob> _logger;
+        private readonly LinkContext _context;
+        private readonly ProductService _productService;
+        public ParceKaspiJob(ILogger<ParceKaspiJob> logger, LinkContext context, ProductService productService)
         {
-           await ParcerCode(link);
+            _logger = logger;
+            _context = context;
+            _productService = productService;
         }
-    }
 
-    private async Task ParcerCode(Link link)
-    {
-        IWebDriver driver = new ChromeDriver();
-        try
+        [JobDisplayName("KaspiJob")]
+        public async Task ParseKaspiLinks()
         {
-            driver.Navigate().GoToUrl(link.Url);
-
-            Random random = new();
-            int randomNumber = random.Next(10000, 20001);
-            Thread.Sleep(randomNumber);
-            
-            var specElements = driver.FindElements(By.CssSelector("ul.short-specifications li.short-specifications__text"));
-            var specName = new StringBuilder();
-            foreach (var element in specElements)
+            //todo we need to get only unique url links, to avoid double parsing the same product
+            var links = await _context.Links.ToListAsync();
+            foreach (var link in links)
             {
-                specName.Append(element.Text + " ");
+                await ParcerCode(link);
             }
-            var productName = driver.FindElement(By.CssSelector("h1.item__heading")).Text;
-
-            var product = new Product(productName, specName.ToString());
-            var createdProduct = await _productService.AddAsync(product);
-            link.Product = createdProduct;
-
-            var parcedMinPrice = driver.FindElement(By.CssSelector("div.item__price-once")).Text;
-            
-            await AddNewPrice(parcedMinPrice.ToLong(), createdProduct);
-
-            _logger.LogInformation("Price: {minPrice}", parcedMinPrice);
-            await _context.SaveChangesAsync();
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, ex.Message);
-        }
-        finally
-        {
-            driver.Quit();
-        }
-    }
 
-    private async Task AddNewPrice(long price, Product product)
-    {
-        var lastPrice = await _context.Prices
-            .AsNoTracking()
-            .Where(x => x.ProductId == product.Id)
-            .OrderByDescending(x => x.CreatedDate)
-            .FirstOrDefaultAsync();
-
-        if (lastPrice?.Value != price)
+        public async Task ParcerCode(Link link)
         {
-            var newPrice = new Price
+            IWebDriver driver = new ChromeDriver();
+            try
             {
-                Value = price,
-                Product = product
-            };
-            _context.Prices.Add(newPrice);
+                driver.Navigate().GoToUrl(link.Url);
+
+                Random random = new();
+                int randomNumber = random.Next(10000, 20001);
+                Thread.Sleep(randomNumber);
+
+                var specElements = driver.FindElements(By.CssSelector("ul.short-specifications li.short-specifications__text"));
+                var specName = new StringBuilder();
+                foreach (var element in specElements)
+                {
+                    specName.Append(element.Text + " ");
+                }
+                var productName = driver.FindElement(By.CssSelector("h1.item__heading")).Text;
+
+                var product = new Product(productName, specName.ToString());
+                var createdProduct = await _productService.AddAsync(product);
+                link.Product = createdProduct;
+
+                var parcedMinPrice = driver.FindElement(By.CssSelector("div.item__price-once")).Text;
+
+                await AddNewPrice(parcedMinPrice.ToLong(), createdProduct);
+
+                _logger.LogInformation("Price: {minPrice}", parcedMinPrice);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+            }
+            finally
+            {
+                driver.Quit();
+            }
+        }
+
+        public async Task AddNewPrice(long price, Product product)
+        {
+            var lastPrice = await _context.Prices
+                .AsNoTracking()
+                .Where(x => x.ProductId == product.Id)
+                .OrderByDescending(x => x.CreatedDate)
+                .FirstOrDefaultAsync();
+
+            if (lastPrice?.Value != price)
+            {
+                var newPrice = new Price
+                {
+                    Value = price,
+                    Product = product
+                };
+                _context.Prices.Add(newPrice);
+            }
         }
     }
 }
-
