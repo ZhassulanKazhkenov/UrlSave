@@ -12,3 +12,5 @@ global using UrlSave.Entities;
 global using UrlSave.Extensions;
 global using UrlSave.Models;
 global using UrlSave.Services;
+global using UrlSave.Interfaces;
+

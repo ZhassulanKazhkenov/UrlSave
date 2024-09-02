@@ -1,13 +1,6 @@
-﻿namespace UrlSave.Jobs
+﻿
+namespace UrlSave.Jobs
 {
-    public interface IParceKaspiJob
-    {
-        Task ParseKaspiLinks();
-        Task ParcerCode(Link link);
-        Task AddNewPrice(long price, Product product);
-
-    }
-
     public class ParceKaspiJob : IParceKaspiJob
     {
         private readonly ILogger<ParceKaspiJob> _logger;

@@ -1,10 +1,5 @@
 ﻿namespace UrlSave.Jobs
 {
-    public interface INotificationPushJob
-    {
-        Task NotifyPriceChanges();
-    }
-
     public class NotificationPushJob : INotificationPushJob
     {
         private readonly ILogger<NotificationPushJob> _logger;

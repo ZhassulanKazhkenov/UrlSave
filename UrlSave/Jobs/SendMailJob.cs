@@ -1,10 +1,5 @@
 ﻿namespace UrlSave.Jobs
 {
-    public interface ISendMailJob
-    {
-        Task SendPendingNotifications();
-        Task<bool> SendNotificationEmailAsync(Notification notification);
-    }
     public class SendMailJob : ISendMailJob
     {
         private readonly ILogger<SendMailJob> _logger;
