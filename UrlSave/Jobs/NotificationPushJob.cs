@@ -39,6 +39,7 @@
                     var lastPrice = prices.First();
                     bool shouldNotify = lastPrice.Value != prices[1]?.Value;
                     var existingNotification = await _context.Notifications
+                        .AsNoTracking()
                         .AnyAsync(x => x.PriceId == lastPrice.Id);
                     if (shouldNotify && !existingNotification)
                     {
@@ -48,8 +49,8 @@
                             Body = $"Your notification about price changing.<br> Previous price is: {prices[1].Value}, New price is: {lastPrice.Value}<br> Link: <a href='{link.Url}'>{link.Product.Name}</a><br>Raw url: {link.Url}",
                             Recipient = link.User.Email,
                             IsSend = false,
-                            Link = link,
-                            Price = lastPrice
+                            LinkId = link.Id,
+                            PriceId = lastPrice.Id
                         };
                         await _context.Notifications.AddAsync(notification);
                     }

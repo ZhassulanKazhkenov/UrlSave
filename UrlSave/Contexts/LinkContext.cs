@@ -1,7 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using UrlSave.Entities;
-
-namespace UrlSave.Contexts
+﻿namespace UrlSave.Contexts
 {
     public class LinkContext : DbContext
     {

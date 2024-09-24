@@ -1,0 +1,10 @@
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.Extensions.Logging;
+global using Moq;
+global using System;
+global using System.Threading.Tasks;
+global using UrlSave.Contexts;
+global using UrlSave.Entities;
+global using UrlSave.Jobs;
+global using UrlSave.Services;
+global using Xunit;

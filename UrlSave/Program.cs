@@ -49,9 +49,11 @@ app.UseSwaggerUI(options =>
     options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
     options.RoutePrefix = string.Empty;
 });
-RecurringJob.AddOrUpdate<ParceKaspiJob>("parcer", x => x.Execute(), "*/2 * * * *");
+
+
+RecurringJob.AddOrUpdate<ParceKaspiJob>("parcer", x => x.ParseKaspiLinks(), "*/2 * * * *");
 RecurringJob.AddOrUpdate<NotificationPushJob>("notification", x => x.NotifyPriceChanges(), "*/2 * * * *");
-RecurringJob.AddOrUpdate<SendMailJob>("sendMail", x => x.Execute(), "*/1 * * * *");
+RecurringJob.AddOrUpdate<SendMailJob>("sendMail", x => x.SendPendingNotifications(), "*/1 * * * *");
 
 
 app.MapControllers();
