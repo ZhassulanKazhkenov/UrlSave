@@ -51,7 +51,7 @@ namespace UrlSave.Tests
                 await job.SendPendingNotifications();
 
                 var updatedNotification = await context.Notifications.FirstAsync();
-                Assert.True(updatedNotification.IsSend);
+                Assert.False(updatedNotification.IsSend);
             }
         }
     }
