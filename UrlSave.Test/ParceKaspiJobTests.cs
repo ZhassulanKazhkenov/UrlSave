@@ -1,50 +1,36 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Moq;
-using UrlSave.Contexts;
-using UrlSave.Entities;
-using UrlSave.Jobs;
-using Xunit;
-
-namespace UrlSave.Tests
+﻿namespace UrlSave.Tests;
+public class ParceKaspiJobTests
 {
-    public class ParceKaspiJobTests
+    private DbContextOptions<LinkContext> GetInMemoryOptions()
     {
-        private DbContextOptions<LinkContext> GetInMemoryOptions()
+        return new DbContextOptionsBuilder<LinkContext>()
+            .UseInMemoryDatabase("InMemoryDb")
+            .Options;
+    }
+
+    [Fact]
+    public async Task ShouldParseLinksAndAddProductsAndPrices()
+    {
+        var options = GetInMemoryOptions();
+        var loggerMock = new Mock<ILogger<ParceKaspiJob>>();
+        var productServiceMock = new Mock<ProductService>(MockBehavior.Loose, new LinkContext(options));
+
+        using (var context = new LinkContext(options))
         {
-            return new DbContextOptionsBuilder<LinkContext>()
-                .UseInMemoryDatabase("InMemoryDb")
-                .Options;
-        }
+            var link = new Link("https://kaspi.kz/shop/p/apple-18w-usb-c-power-adapter-usb-type-c-belyi-102743952/?c=710000000", 1, null);
+            context.Links.Add(link);
+            await context.SaveChangesAsync();
 
-        [Fact]
-        public async Task ParseKaspiLinks_ShouldParseLinksAndAddProductsAndPrices()
-        {
-            var options = GetInMemoryOptions();
-            var loggerMock = new Mock<ILogger<ParceKaspiJob>>();
-            var productServiceMock = new Mock<ProductService>();
+            var job = new ParceKaspiJob(loggerMock.Object, context, productServiceMock.Object);
+            await job.ParseKaspiLinks();
 
-            using (var context = new LinkContext(options))
-            {
-                var link = new Link("http://example.com", 1, null);
-                context.Links.Add(link);
-                await context.SaveChangesAsync();
+            var products = await context.Products.ToListAsync();
+            var prices = await context.Prices.ToListAsync();
 
-                var job = new ParceKaspiJob(loggerMock.Object, context, productServiceMock.Object);
-                await job.ParseKaspiLinks();
-
-                var products = await context.Products.ToListAsync();
-                var prices = await context.Prices.ToListAsync();
-
-                Assert.Single(products);
-                Assert.Single(prices);
-                Assert.Equal(link.ProductId, products.First().Id);
-                Assert.Equal(products.First().Id, prices.First().ProductId);
-            }
+            Assert.Single(products);
+            Assert.Single(prices);
+            Assert.Equal(link.ProductId, products.First().Id);
+            Assert.Equal(products.First().Id, prices.First().ProductId);
         }
     }
 }
