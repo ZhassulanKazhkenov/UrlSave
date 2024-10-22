@@ -8,19 +8,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-	<PackageReference Include="Hangfire" Version="1.8.14" />
-	<PackageReference Include="Hangfire.SqlServer" Version="1.8.14" />
 	<PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning.ApiExplorer" Version="5.1.0" />
-	<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.10" />
 	<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.10">
 	  <PrivateAssets>all</PrivateAssets>
 	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	  <TreatAsUsed>true</TreatAsUsed>
 	</PackageReference>
-	<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
-	<PackageReference Include="Moq" Version="4.20.72" />
-	<PackageReference Include="Selenium.WebDriver" Version="4.25.0" />
 	<PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\UrlSave.Application\UrlSave.Application.csproj" />
+    <ProjectReference Include="..\UrlSave.DataAccess\UrlSave.DataAccess.csproj" />
   </ItemGroup>
 
 </Project>

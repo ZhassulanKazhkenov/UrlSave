@@ -1,4 +1,11 @@
-﻿namespace UrlSave.Controllers.v1;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Net.Mime;
+using UrlSave.Application.Interfaces;
+using UrlSave.Domain.Entities;
+using UrlSave.DTOs;
+
+namespace UrlSave.Controllers.v1;
 
 [ApiController]
 [Route("api/v{version:apiVersion}/[controller]")]
@@ -6,9 +13,9 @@
 [Produces("application/json")]
 public class LinkController : ControllerBase
 {
-    private readonly LinkContext _context;
+    private readonly ILinkContext _context;
 
-    public LinkController(LinkContext context)
+    public LinkController(ILinkContext context)
     {
         _context = context;
     }

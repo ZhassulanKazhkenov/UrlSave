@@ -1,11 +1,12 @@
 using Hangfire;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
-using UrlSave.Contexts;
-using UrlSave.Extensions;
-using UrlSave.Jobs;
-using UrlSave.Services;
+using UrlSave.Application.Jobs;
+using UrlSave.Application.Services;
+using UrlSave.DataAccess.Extensions;
+using UrlSave.Application.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
@@ -37,9 +38,21 @@ builder.Services.AddSwaggerGen(options =>
 
 string connection = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddHangfireInfrastructure(connection);
-builder.Services.AddApiVersioningExtension();
+builder.Services.AddLinkDbContext(connection);
 
-builder.Services.AddDbContext<LinkContext>(options => options.UseSqlServer(connection));
+builder.Services.AddApiVersioning(config =>
+{
+    config.DefaultApiVersion = new ApiVersion(1, 0);
+    config.AssumeDefaultVersionWhenUnspecified = true;
+    config.ReportApiVersions = true;
+});
+
+builder.Services.AddVersionedApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
+
 var app = builder.Build();
 
 app.UseHangfireDashboard();
